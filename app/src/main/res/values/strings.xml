@@ -1,3 +1,8 @@
 <resources>
-    <string name="app_name">My Application</string>
+    <string name="app_name">NF Attend</string>
+    <string name="main_email">Email</string>
+    <string name="main_password">Password</string>
+    <string name="main_login">Login</string>
+    <string name="main_forgot">Forgot Password</string>
+    <string name="main_create">Don\'t have an account? Create one!</string>
 </resources>

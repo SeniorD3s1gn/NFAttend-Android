@@ -8,24 +8,20 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-
-
 public class MainActivity extends AppCompatActivity {
 
-    private TextView UserName;
+    private TextView Email;
     private TextView Password;
     private TextView Forgot;
     private TextView Create;
     private Button Login;
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        UserName = findViewById(R.id.MainUsername);
+        Email = findViewById(R.id.MainEmail);
         Password = findViewById(R.id.MainPassword);
         Forgot = findViewById(R.id.MainForgot);
         Create = findViewById(R.id.MainCreate);
@@ -44,10 +40,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean validate() {
-
-        return!( UserName.getText().toString().matches("")) && !(Password.getText().toString().matches(""));
-
-
+        return!(Email.getText().toString().matches("")) && !(Password.getText().toString().matches(""));
     }
 
 }
