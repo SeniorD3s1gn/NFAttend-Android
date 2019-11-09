@@ -1,9 +1,12 @@
 package com.nfa.android.models;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.util.Date;
 import java.util.List;
 
-public class Course {
+public class Course implements Parcelable {
 
     private String id;
     private String name;
@@ -14,10 +17,11 @@ public class Course {
     private String startTime;
     private String endTime;
     private String location;
+    private String prof;
 
     public Course(String id, String name, String number, String section,
-                  CourseType type, List<String> dates, String startTime, String endTime,
-                  String location) {
+            CourseType type, List<String> dates, String startTime, String endTime,
+            String location, String prof) {
         this.id = id;
         this.name = name;
         this.number = number;
@@ -27,7 +31,33 @@ public class Course {
         this.startTime = startTime;
         this.endTime = endTime;
         this.location = location;
+        this.prof = prof;
     }
+
+    protected Course(Parcel in) {
+        id = in.readString();
+        name = in.readString();
+        number = in.readString();
+        section = in.readString();
+        dates = in.createStringArrayList();
+        startTime = in.readString();
+        endTime = in.readString();
+        location = in.readString();
+        prof = in.readString();
+        type = CourseType.valueOf(in.readString());
+    }
+
+    public static final Creator<Course> CREATOR = new Creator<Course>() {
+        @Override
+        public Course createFromParcel(Parcel in) {
+            return new Course(in);
+        }
+
+        @Override
+        public Course[] newArray(int size) {
+            return new Course[size];
+        }
+    };
 
     public String getId() {
         return id;
@@ -89,6 +119,10 @@ public class Course {
         return endTime;
     }
 
+    public String getProf(){return prof;}
+
+    public void setProf(String prof){this.prof = prof;}
+
     public void setEndTime(String endTime) {
         this.endTime = endTime;
     }
@@ -110,5 +144,24 @@ public class Course {
             }
         }
         return sb.toString();
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeString(id);
+        parcel.writeString(name);
+        parcel.writeString(number);
+        parcel.writeString(section);
+        parcel.writeStringList(dates);
+        parcel.writeString(startTime);
+        parcel.writeString(endTime);
+        parcel.writeString(location);
+        parcel.writeString(prof);
+        parcel.writeString(type.name());
     }
 }

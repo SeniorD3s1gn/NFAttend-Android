@@ -97,11 +97,11 @@ public class HomeActivity extends AppCompatActivity implements ConnectionListene
     public void loadFakeCourses() {
         Course c1 = new Course("0000", "CSCI", "300", "M01",
                 CourseType.LECTURE, Arrays.asList("Mon", "Tues"), "9:00am",
-                "12:35pm", "26 West 61st Street 203" );
+                "12:35pm", "26 West 61st Street 203", "Dr.Guy" );
         courses.add(c1);
         Course c2 = new Course("0001", "FCWR", "301", "M01",
                 CourseType.LECTURE, Arrays.asList("Mon", "Tues"), "2:20pm",
-                "3:45pm", "Edward Guiliano Global Center 415" );
+                "3:45pm", "Edward Guiliano Global Center 415", "Dr.Ben" );
         courses.add(c2);
         adapter.notifyDataSetChanged();
     }
