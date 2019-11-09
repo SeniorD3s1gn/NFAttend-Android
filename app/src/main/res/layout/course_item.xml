@@ -1,39 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="6dp"
+    app:cardElevation="6dp"
+    android:id="@+id/course_layout">
 
-    <TextView
-        android:id="@+id/ItemName"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="%1$s %2$s %3$s"
-        android:textAlignment="center"
-        android:textSize="24sp" />
+        android:padding="16dp"
+        android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/ItemType"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="%1$s"
-        android:textAlignment="center"
-        android:textSize="24sp" />
+        <TextView
+            android:id="@+id/ItemName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/course_item_name"
+            android:textAlignment="center"
+            android:textSize="24sp" />
 
-    <TextView
-        android:id="@+id/ItemTime"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="%1$s"
-        android:textAlignment="center"
-        android:textSize="24sp" />
+        <TextView
+            android:id="@+id/item_date"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/course_item_date"
+            android:textAlignment="center"
+            android:textSize="24sp" />
 
-    <TextView
-        android:id="@+id/ItemLocation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="%1$s"
-        android:textAlignment="center"
-        android:textSize="24sp" />
+        <TextView
+            android:id="@+id/ItemTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/course_item_time"
+            android:textAlignment="center"
+            android:textSize="24sp" />
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/ItemLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/course_item_location"
+            android:textAlignment="center"
+            android:textSize="24sp" />
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

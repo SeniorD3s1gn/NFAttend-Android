@@ -17,7 +17,7 @@ public class CourseActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.course_page);
+        setContentView(R.layout.activity_course);
 
         CourseInfo = findViewById(R.id.CourseInfo);
         CourseType = findViewById(R.id.CourseType);

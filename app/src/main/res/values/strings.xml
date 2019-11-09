@@ -3,6 +3,18 @@
     <string name="main_email">Email</string>
     <string name="main_password">Password</string>
     <string name="main_login">Login</string>
+    <string name="main_remember">Remember Me</string>
     <string name="main_forgot">Forgot Password</string>
     <string name="main_create">Don\'t have an account? Create one!</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="home_welcome_message">Welcome %1$s</string>
+    <string name="home_date_message">Today is\n%1$s</string>
+    <string name="course_item_name">%1$s %2$s - %3$s</string>
+    <string name="course_item_type">%1$s</string>
+    <string name="course_item_date">%1$s</string>
+    <string name="course_item_time">%1$s &amp; %2$s</string>
+    <string name="course_item_location">%1$s</string>
+
+    <style name="home_current_time">%1$s</style>
 </resources>

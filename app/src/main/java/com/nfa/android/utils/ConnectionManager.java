@@ -1,19 +1,25 @@
 package com.nfa.android.utils;
 
-import android.content.Context;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.util.Log;
 
-import com.android.volley.NetworkResponse;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
+import com.nfa.android.BuildConfig;
+import com.nfa.android.listeners.ConnectionListener;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -21,70 +27,163 @@ import java.util.UUID;
 public class ConnectionManager {
 
     private static final String TAG = ConnectionManager.class.getSimpleName();
-    private Context context;
-    private String url;
 
-    public ConnectionManager(Context context, String url) {
-        this.url = url;
-        this.context = context;
-    }
+    private static final String USER_AGENT = "Mozilla/5.0";
+    private static final String APIKEY = BuildConfig.API_KEY.trim();
 
-    public void login(final String email, String password) {
-        JSONObject json;
+    private URL url;
+    private ConnectionListener listener;
+    private HandlerThread thread;
+
+    public ConnectionManager(String url, ConnectionListener listener) {
         try {
-            json = new JSONObject();
-            json.put("email", email);
-            json.put("password", password);
-        } catch (JSONException ex) {
-            Log.d(TAG, ex.getMessage());
-            return;
+            this.url = new URL(url);
+            this.listener = listener;
+            thread = new HandlerThread("NetworkThread");
+            thread.start();
+        } catch (MalformedURLException ex) {
+            ex.printStackTrace();
         }
-        createJsonRequest(json);
     }
 
-    public void register(String firstName, String lastName, String email, String id, String password) {
-        JSONObject json;
-        try {
-            json = new JSONObject();
-            json.put("first_name", firstName);
-            json.put("last_name", lastName);
-            json.put("email", email);
-            json.put("id", id);
-            json.put("password", password);
-            json.put("device", UUID.randomUUID());
-        } catch (JSONException ex) {
-            Log.d(TAG, ex.getMessage());
-            return;
-        }
-        createJsonRequest(json);
-    }
-
-    private void createJsonRequest(JSONObject json) {
-        RequestQueue queue = Volley.newRequestQueue(context);
-        JsonObjectRequest loginRequest = new JsonObjectRequest(Request.Method.POST, url, json,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Log.d(TAG, response.toString());
-                    }
-                }, new Response.ErrorListener() {
+    public void login(final String email, final String password) {
+        Handler handler = new Handler(thread.getLooper());
+        handler.post(new Runnable() {
             @Override
-            public void onErrorResponse(VolleyError error) {
-                NetworkResponse networkResponse = error.networkResponse;
-                if (networkResponse != null && networkResponse.data != null) {
-                    String jsonError = new String(networkResponse.data);
-                    Log.d(TAG, jsonError);
+            public void run() {
+                HashMap<String, String> values = new HashMap<>();
+                values.put("email", email);
+                values.put("password", password);
+                try {
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("POST");
+                    conn.setDoInput(true);
+                    conn.setDoOutput(true);
+                    conn.setRequestProperty("Accept", "application/json");
+                    conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                    conn.setRequestProperty("secret", APIKEY);
+
+                    String encoded = getDataString(values);
+
+                    try(OutputStream os = conn.getOutputStream()) {
+                        byte[] input = encoded.getBytes(StandardCharsets.UTF_8);
+                        os.write(input, 0, input.length);
+                    }
+
+                    try(BufferedReader br = new BufferedReader(new InputStreamReader(
+                            conn.getInputStream(), StandardCharsets.UTF_8))) {
+                        StringBuilder response = new StringBuilder();
+                        String responseLine;
+                        while ((responseLine = br.readLine()) != null) {
+                            response.append(responseLine.trim());
+                        }
+                        Log.d(TAG, response.toString());
+                        listener.onConnectionFinish("Login", new JSONObject(response.toString()));
+                    }
+
+                } catch (IOException | JSONException ex) {
+                    ex.printStackTrace();
                 }
             }
-        }) {
+        });
+    }
+
+    public void register(final String firstName, final String lastName, final String email,
+                         final String id, final String password) {
+        Handler handler = new Handler(thread.getLooper());
+        handler.post(new Runnable() {
             @Override
-            protected Map<String, String> getParams() {
-                final Map<String, String> headers = new HashMap<>();
-                headers.put("secret", "/VeF/$9xJcv(![bZn[~%!zQy9U_jMoJIqC[?tZb_w&C-63O^X`+]sT4p;o+TTLI");
-                return headers;
+            public void run() {
+                HashMap<String, String> values = new HashMap<>();
+                values.put("first_name", firstName);
+                values.put("last_name", lastName);
+                values.put("email", email);
+                values.put("password", password);
+                values.put("id", id);
+                values.put("device", UUID.randomUUID().toString());
+                try {
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("POST");
+                    conn.setDoInput(true);
+                    conn.setDoOutput(true);
+                    conn.setRequestProperty("Accept", "application/json");
+                    conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                    conn.setRequestProperty("secret", APIKEY);
+
+                    String encoded = getDataString(values);
+
+                    try(OutputStream os = conn.getOutputStream()) {
+                        byte[] input = encoded.getBytes(StandardCharsets.UTF_8);
+                        os.write(input, 0, input.length);
+                    }
+
+                    try(BufferedReader br = new BufferedReader(new InputStreamReader(
+                            conn.getInputStream(), StandardCharsets.UTF_8))) {
+                        StringBuilder response = new StringBuilder();
+                        String responseLine;
+                        while ((responseLine = br.readLine()) != null) {
+                            response.append(responseLine.trim());
+                        }
+                        Log.d(TAG, response.toString());
+                        listener.onConnectionFinish("Register", new JSONObject(response.toString()));
+                    }
+
+                } catch (IOException | JSONException ex) {
+                    ex.printStackTrace();
+                }
             }
-        };
-        queue.add(loginRequest);
+        });
+    }
+
+    public void retrieveStudent(final String id) {
+        Handler handler = new Handler(thread.getLooper());
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    URL urlX = new URL(url + "" + id);
+                    HttpURLConnection conn = (HttpURLConnection) urlX.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.setRequestProperty("User-Agent", USER_AGENT);
+                    conn.setDoOutput(false);
+                    conn.setRequestProperty("Accept", "application/json");
+                    conn.setRequestProperty("secret", APIKEY);
+
+                    int status = conn.getResponseCode();
+
+                    Log.d(TAG, "status code: " + status);
+
+                    try(BufferedReader br = new BufferedReader(new InputStreamReader(
+                            conn.getInputStream(), StandardCharsets.UTF_8))) {
+                        StringBuilder response = new StringBuilder();
+                        String responseLine;
+                        while ((responseLine = br.readLine()) != null) {
+                            response.append(responseLine.trim());
+                        }
+                        Log.d(TAG, response.toString());
+                        listener.onConnectionFinish("Student", new JSONObject(response.toString()));
+                    }
+
+                } catch (IOException | JSONException ex) {
+                    Log.d(TAG, ex.toString());
+                }
+            }
+        });
+    }
+
+    private String getDataString(HashMap<String, String> params) throws UnsupportedEncodingException {
+        StringBuilder result = new StringBuilder();
+        boolean first = true;
+        for(Map.Entry<String, String> entry : params.entrySet()){
+            if (first)
+                first = false;
+            else
+                result.append("&");
+            result.append(URLEncoder.encode(entry.getKey(), "UTF-8"));
+            result.append("=");
+            result.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
+        }
+        return result.toString();
     }
 
 }
