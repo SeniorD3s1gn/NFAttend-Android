@@ -36,7 +36,7 @@ public class HomeActivity extends AppCompatActivity implements ConnectionListene
 
     private static final String TAG = HomeActivity.class.getSimpleName();
     private static final String api = "https://nfattend.firebaseapp.com/api/students/";
-    private static final SimpleDateFormat SDF = new SimpleDateFormat("EEEE, MMMM d hh:mm", Locale.ENGLISH);
+    private static final SimpleDateFormat SDF = new SimpleDateFormat("EEEE, MMMM d h:mm", Locale.ENGLISH);
 
     private DrawerLayout drawer;
     private CourseAdapter adapter;
@@ -59,6 +59,7 @@ public class HomeActivity extends AppCompatActivity implements ConnectionListene
         courses = new ArrayList<>();
         manager = new ConnectionManager(api, this);
         manager.retrieveStudent(this.getIntent().getStringExtra("STUDENT_ID"));
+        manager.retrieveCourses(this.getIntent().getStringExtra("STUDENT_ID"));
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -77,7 +78,7 @@ public class HomeActivity extends AppCompatActivity implements ConnectionListene
         courseView.setAdapter(adapter);
 
         courseView.setLayoutManager(new LinearLayoutManager(this));
-        loadFakeCourses();
+        // loadFakeCourses();
 
         thread = new HandlerThread("BACKGROUND");
         thread.start();
@@ -128,27 +129,83 @@ public class HomeActivity extends AppCompatActivity implements ConnectionListene
         run.run();
     }
 
+    private void initializeStudent(JSONObject object) {
+        try {
+            String id = object.getString("id");
+            String first_name = object.getString("first_name");
+            String last_name = object.getString("last_name");
+            String email = object.getString("email");
+            String device = object.getString("device");
+            student = new Student(first_name, last_name, email, id, device);
+            updateUI();
+        } catch (JSONException ex) {
+            Log.d(TAG, "could not create student: " + ex.getMessage());
+        }
+    }
+
+    private void refreshCourseView(JSONArray array) {
+        try {
+            for (int i = 0; i < array.length(); i++) {
+                Log.d(TAG, "vsl: " + array.get(i));
+                JSONObject o = array.getJSONObject(i);
+                String id = o.getString("id");
+                String name = o.getString("name");
+                String section = o.getString("section");
+                String number = o.getString("number");
+                String professor = o.getString("professor");
+                String jsonType = o.getString("type");
+                JSONArray jsonTimes = o.getJSONArray("times");
+                JSONArray jsonDates = o.getJSONArray("dates");
+                String location = o.getString("location");
+                List<String> times = new ArrayList<>();
+                List<String> dates = new ArrayList<>();
+                for (int x = 0; x < jsonTimes.length(); x++) {
+                    times.add(jsonTimes.getString(x));
+                }
+                for (int x = 0; x < jsonDates.length(); x++) {
+                    dates.add(jsonDates.getString(x));
+                }
+                CourseType type = CourseType.valueOf(jsonType.toUpperCase());
+                courses.add(new Course(id, name, number, section, type, dates,
+                        times.get(0), times.get(1), location, professor));
+            }
+            student.setCourses(courses);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    adapter.notifyDataSetChanged();
+                }
+            });
+        } catch (Exception ex) {
+            Log.d(TAG, ex.getMessage());
+        }
+    }
+
     @Override
     public void onConnectionFinish(String eventType, JSONObject object) {
-        if (eventType.equals("Student")) {
-            try {
-                String id = object.getString("id");
-                String first_name = object.getString("first_name");
-                String last_name = object.getString("last_name");
-                String email = object.getString("email");
-                String device = object.getString("device");
-                if (object.has("courses")) {
-                    JSONArray courses = object.getJSONArray("courses");
-                    for (int i = 0; i < courses.length(); i++) {
-                        JSONObject o = courses.getJSONObject(i);
-                        Log.d(TAG, o.toString());
-                    }
-                }
-                student = new Student(first_name, last_name, email, id, device);
-                updateUI();
-            } catch (JSONException ex) {
-                ex.printStackTrace();
-            }
+        switch (eventType) {
+            case "Student":
+                initializeStudent(object);
+                break;
+            case "Courses":
+                // refreshCourseView(object);
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public void onConnectionFinish(String eventType, JSONArray array) {
+        switch (eventType) {
+            case "Student":
+                // initializeStudent(array);
+                break;
+            case "Courses":
+                refreshCourseView(array);
+                break;
+            default:
+                break;
         }
     }
 }

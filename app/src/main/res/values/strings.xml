@@ -13,7 +13,7 @@
     <string name="course_item_name">%1$s %2$s - %3$s</string>
     <string name="course_item_type">%1$s</string>
     <string name="course_item_date">%1$s</string>
-    <string name="course_item_time">%1$s &amp; %2$s</string>
+    <string name="course_item_time">%1$s - %2$s</string>
     <string name="course_item_location">%1$s</string>
     <string name="course_item_prof">%1$s</string>
     <style name="home_current_time">%1$s</style>

@@ -1,14 +1,24 @@
 package com.nfa.android;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.CalendarView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.nfa.android.listeners.ConnectionListener;
 import com.nfa.android.models.Course;
+import com.nfa.android.utils.ConnectionManager;
 
-public class CourseActivity extends AppCompatActivity {
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+public class CourseActivity extends AppCompatActivity implements ConnectionListener {
+
+    private static final String TAG = Course.class.getSimpleName();
+    private static final String api = "https://nfattend.firebaseapp.com/api/faculty/";
 
     private TextView CourseInfo;
     private TextView CourseType;
@@ -17,6 +27,9 @@ public class CourseActivity extends AppCompatActivity {
     private TextView CourseDate;
     private TextView CourseProf;
     private CalendarView CourseCal;
+
+    private String professorName;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,6 +45,9 @@ public class CourseActivity extends AppCompatActivity {
 
         Course course = this.getIntent().getParcelableExtra("Course");
         fill(course);
+
+        ConnectionManager manager = new ConnectionManager(api, this);
+        manager.retrieveProfessor(course.getProf());
     }
 
     public void fill(Course course)
@@ -43,7 +59,32 @@ public class CourseActivity extends AppCompatActivity {
         CourseTime.setText(getString(R.string.course_item_time, course.getStartTime(),
                 course.getEndTime()));
         CourseLocation.setText(getString(R.string.course_item_location, course.getLocation()));
-        CourseProf.setText(getString(R.string.course_item_prof, course.getProf()));
         //fill calander method
+    }
+
+    private void updateCourseInformation() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                CourseProf.setText(getString(R.string.course_item_prof, professorName));
+            }
+        });
+    }
+
+    @Override
+    public void onConnectionFinish(String eventType, JSONObject object) {
+        if (eventType.equals("Professor")) {
+            try {
+                professorName = object.getString("first_name") + " " + object.getString("last_name");
+                updateCourseInformation();
+            } catch (JSONException ex) {
+                Log.d(TAG, ex.getMessage());
+            }
+        }
+    }
+
+    @Override
+    public void onConnectionFinish(String eventType, JSONArray array) {
+
     }
 }

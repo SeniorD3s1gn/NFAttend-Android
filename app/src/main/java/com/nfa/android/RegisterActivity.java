@@ -14,6 +14,7 @@ import com.nfa.android.listeners.ConnectionListener;
 import com.nfa.android.utils.ConnectionManager;
 import com.nfa.android.utils.StringValidator;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class RegisterActivity extends AppCompatActivity implements ConnectionListener {
@@ -106,5 +107,10 @@ public class RegisterActivity extends AppCompatActivity implements ConnectionLis
         if (result.contains("Register")) {
             Log.d(TAG, "user: " + result);
         }
+    }
+
+    @Override
+    public void onConnectionFinish(String eventType, JSONArray array) {
+
     }
 }

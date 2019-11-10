@@ -7,6 +7,7 @@ import android.util.Log;
 import com.nfa.android.BuildConfig;
 import com.nfa.android.listeners.ConnectionListener;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -162,6 +163,78 @@ public class ConnectionManager {
                         }
                         Log.d(TAG, response.toString());
                         listener.onConnectionFinish("Student", new JSONObject(response.toString()));
+                    }
+
+                } catch (IOException | JSONException ex) {
+                    Log.d(TAG, ex.toString());
+                }
+            }
+        });
+    }
+
+    public void retrieveProfessor(final String id) {
+        Handler handler = new Handler(thread.getLooper());
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    URL urlX = new URL(url + "" + id);
+                    HttpURLConnection conn = (HttpURLConnection) urlX.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.setRequestProperty("User-Agent", USER_AGENT);
+                    conn.setDoOutput(false);
+                    conn.setRequestProperty("Accept", "application/json");
+                    conn.setRequestProperty("secret", APIKEY);
+
+                    int status = conn.getResponseCode();
+
+                    Log.d(TAG, "status code: " + status);
+
+                    try(BufferedReader br = new BufferedReader(new InputStreamReader(
+                            conn.getInputStream(), StandardCharsets.UTF_8))) {
+                        StringBuilder response = new StringBuilder();
+                        String responseLine;
+                        while ((responseLine = br.readLine()) != null) {
+                            response.append(responseLine.trim());
+                        }
+                        Log.d(TAG, response.toString());
+                        listener.onConnectionFinish("Professor", new JSONObject(response.toString()));
+                    }
+
+                } catch (IOException | JSONException ex) {
+                    Log.d(TAG, ex.toString());
+                }
+            }
+        });
+    }
+
+    public void retrieveCourses(final String id) {
+        Handler handler = new Handler(thread.getLooper());
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    URL urlX = new URL(url + "" + id);
+                    HttpURLConnection conn = (HttpURLConnection) urlX.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.setRequestProperty("User-Agent", USER_AGENT);
+                    conn.setDoOutput(false);
+                    conn.setRequestProperty("Accept", "application/json");
+                    conn.setRequestProperty("secret", APIKEY);
+                    conn.setRequestProperty("data", "courses");
+
+                    int status = conn.getResponseCode();
+
+                    Log.d(TAG, "status code: " + status);
+
+                    try(BufferedReader br = new BufferedReader(new InputStreamReader(
+                            conn.getInputStream(), StandardCharsets.UTF_8))) {
+                        StringBuilder response = new StringBuilder();
+                        String responseLine;
+                        while ((responseLine = br.readLine()) != null) {
+                            response.append(responseLine.trim());
+                        }
+                        listener.onConnectionFinish("Courses", new JSONArray(response.toString()));
                     }
 
                 } catch (IOException | JSONException ex) {

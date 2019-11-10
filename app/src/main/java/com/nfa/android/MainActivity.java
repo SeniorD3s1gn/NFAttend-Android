@@ -16,6 +16,7 @@ import com.nfa.android.listeners.ConnectionListener;
 import com.nfa.android.utils.ConnectionManager;
 import com.nfa.android.utils.StringValidator;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -97,6 +98,11 @@ public class MainActivity extends AppCompatActivity implements ConnectionListene
     }
 
     @Override
+    public void onConnectionFinish(String eventType, JSONArray array) {
+
+    }
+
+    @Override
     public void onConnectionFinish(String eventType, JSONObject object) {
         if (eventType.equals("Login")) {
             if (object.has("id")) {
@@ -105,6 +111,8 @@ public class MainActivity extends AppCompatActivity implements ConnectionListene
                     login(id);
                 } catch (JSONException ex) {
                     ex.printStackTrace();
+
+
                 }
             }
         }
