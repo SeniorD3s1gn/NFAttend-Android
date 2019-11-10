@@ -111,8 +111,6 @@ public class MainActivity extends AppCompatActivity implements ConnectionListene
                     login(id);
                 } catch (JSONException ex) {
                     ex.printStackTrace();
-
-
                 }
             }
         }
