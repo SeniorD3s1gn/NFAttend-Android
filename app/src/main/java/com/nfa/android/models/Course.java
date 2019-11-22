@@ -3,7 +3,6 @@ package com.nfa.android.models;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import java.util.Date;
 import java.util.List;
 
 public class Course implements Parcelable {
