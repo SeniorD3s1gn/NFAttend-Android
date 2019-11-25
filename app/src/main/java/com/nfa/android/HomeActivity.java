@@ -7,6 +7,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.HandlerThread;
 import android.util.Log;
@@ -17,6 +18,7 @@ import com.nfa.android.listeners.ConnectionListener;
 import com.nfa.android.models.Course;
 import com.nfa.android.models.CourseType;
 import com.nfa.android.models.Student;
+import com.nfa.android.nfc.NFCManager;
 import com.nfa.android.utils.ConnectionManager;
 
 import org.json.JSONArray;
@@ -41,10 +43,18 @@ public class HomeActivity extends AppCompatActivity implements
 
     private HomeActive homeActive;
 
+    private NFCManager nfcManager;
+
+    private boolean searching;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        searching = false;
+
+        nfcManager = new NFCManager(this);
 
         homeActive = new HomeActive();
 
@@ -75,6 +85,46 @@ public class HomeActivity extends AppCompatActivity implements
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        if (isSearching()) {
+            nfcManager.disableForegroundDispatch();
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        Log.d(TAG, "new intent");
+        if (isSearching()) {
+            if (nfcManager.handleIntent(intent)) {
+                stopSearching();
+            }
+        }
+    }
+
+    public boolean startSearching() {
+        if (!isSearching()) {
+            searching = true;
+            boolean res = nfcManager.foregroundDispatch();
+            if (!res) {
+                Log.d(TAG, "NFC Not Enabled On This Device");
+                return false;
+            }
+            Log.d(TAG, "dispatch foreground search");
+            return true;
+        }
+        return false;
+    }
+
+    public void stopSearching() {
+        if (isSearching()) {
+            nfcManager.disableForegroundDispatch();
+            searching = false;
+        }
+    }
+
+    @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
         switch(menuItem.getItemId()) {
             case R.id.nav_Home:
@@ -101,6 +151,10 @@ public class HomeActivity extends AppCompatActivity implements
         } else {
             super.onBackPressed();
         }
+    }
+
+    public boolean isSearching() {
+        return searching;
     }
 
     private void initializeStudent(JSONObject object) {

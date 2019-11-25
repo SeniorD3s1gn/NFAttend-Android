@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity implements ConnectionListene
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String api = "https://nfattend.firebaseapp.com/api/auth/";
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
 
     private EditText Email;
     private EditText Password;
@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements ConnectionListene
         setContentView(R.layout.activity_main);
 
         if (DEBUG) {
-            login(null);
+            login("030587");
         }
 
         Email = findViewById(R.id.MainEmail);
