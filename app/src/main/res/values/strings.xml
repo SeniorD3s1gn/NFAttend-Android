@@ -1,11 +1,13 @@
 <resources>
     <string name="app_name">NF Attend</string>
+    <!-- login -->
     <string name="main_email">Email</string>
     <string name="main_password">Password</string>
     <string name="main_login">Login</string>
     <string name="main_remember">Remember Me</string>
     <string name="main_forgot">Forgot Password</string>
     <string name="main_create">Don\'t have an account? Create one!</string>
+    <!-- home -->
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="home_welcome_message">Welcome %1$s</string>
@@ -17,6 +19,13 @@
     <string name="course_item_location">%1$s</string>
     <string name="course_item_prof">%1$s</string>
     <string name="home_attend_btn">Attend</string>
-
     <string name="home_current_time">%1$s</string>
+    <!-- nfc -->
+    <string name="message_tag_detected">NFC Tag Detected</string>
+    <string name="message_read_tag">Read from NFC Tag</string>
+    <string name="message_tap_tag">Tap the NFC Tag to your device</string>
+    <string name="nfc_icon_content">nfc icon</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

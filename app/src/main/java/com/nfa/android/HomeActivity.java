@@ -7,18 +7,25 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.nfc.NfcAdapter;
+import android.nfc.Tag;
+import android.nfc.tech.MifareUltralight;
 import android.os.Bundle;
 import android.os.HandlerThread;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.google.android.material.navigation.NavigationView;
+import com.nfa.android.fragments.NFCReadFragment;
 import com.nfa.android.listeners.ConnectionListener;
+import com.nfa.android.listeners.NFCListener;
 import com.nfa.android.models.Course;
 import com.nfa.android.models.CourseType;
 import com.nfa.android.models.Student;
-import com.nfa.android.nfc.NFCManager;
 import com.nfa.android.utils.ConnectionManager;
 
 import org.json.JSONArray;
@@ -29,7 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HomeActivity extends AppCompatActivity implements
-        NavigationView.OnNavigationItemSelectedListener, ConnectionListener {
+        NavigationView.OnNavigationItemSelectedListener, ConnectionListener, NFCListener {
 
     private static final String TAG = HomeActivity.class.getSimpleName();
     private static final String api = "https://nfattend.firebaseapp.com/api/students/";
@@ -37,26 +44,23 @@ public class HomeActivity extends AppCompatActivity implements
     private DrawerLayout drawer;
 
     private List<Course> courses;
-    private ConnectionManager manager;
     private Student student;
     private HandlerThread thread;
 
     private HomeActive homeActive;
+    private NFCReadFragment readFragment;
 
-    private NFCManager nfcManager;
+    private NfcAdapter adapter;
 
-    private boolean searching;
+    private boolean isDialogDisplayed = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        searching = false;
-
-        nfcManager = new NFCManager(this);
-
         homeActive = new HomeActive();
+        adapter = NfcAdapter.getDefaultAdapter(this);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -76,7 +80,7 @@ public class HomeActivity extends AppCompatActivity implements
         }
 
         courses = new ArrayList<>();
-        manager = new ConnectionManager(api, this);
+        ConnectionManager manager = new ConnectionManager(api, this);
         manager.retrieveStudent(this.getIntent().getStringExtra("STUDENT_ID"));
         manager.retrieveCourses(this.getIntent().getStringExtra("STUDENT_ID"));
 
@@ -85,42 +89,46 @@ public class HomeActivity extends AppCompatActivity implements
     }
 
     @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        IntentFilter tagDetected = new IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED);
+        IntentFilter ndefDetected = new IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED);
+        IntentFilter techDetected = new IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED);
+        IntentFilter[] nfcIntentFilter = new IntentFilter[]{ techDetected, tagDetected, ndefDetected };
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+                new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
+        if(adapter != null) {
+            adapter.enableForegroundDispatch(this, pendingIntent, nfcIntentFilter, null);
+        }
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
-        if (isSearching()) {
-            nfcManager.disableForegroundDispatch();
+        if (adapter != null) {
+            adapter.disableForegroundDispatch(this);
         }
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        Log.d(TAG, "new intent");
-        if (isSearching()) {
-            if (nfcManager.handleIntent(intent)) {
-                stopSearching();
-            }
-        }
-    }
+        Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
 
-    public boolean startSearching() {
-        if (!isSearching()) {
-            searching = true;
-            boolean res = nfcManager.foregroundDispatch();
-            if (!res) {
-                Log.d(TAG, "NFC Not Enabled On This Device");
-                return false;
-            }
-            Log.d(TAG, "dispatch foreground search");
-            return true;
-        }
-        return false;
-    }
+        Log.d(TAG, "onNewIntent: " + intent.getAction());
 
-    public void stopSearching() {
-        if (isSearching()) {
-            nfcManager.disableForegroundDispatch();
-            searching = false;
+        if(tag != null) {
+            Toast.makeText(this, getString(R.string.message_tag_detected), Toast.LENGTH_SHORT).show();
+            MifareUltralight mifareUltralight = MifareUltralight.get(tag);
+
+            if (isDialogDisplayed) {
+                    readFragment = (NFCReadFragment) getSupportFragmentManager()
+                            .findFragmentByTag(NFCReadFragment.TAG);
+                    if (readFragment != null) {
+                        readFragment.onNfcDetected(mifareUltralight);
+                    }
+            }
         }
     }
 
@@ -153,8 +161,50 @@ public class HomeActivity extends AppCompatActivity implements
         }
     }
 
-    public boolean isSearching() {
-        return searching;
+    @Override
+    public void onConnectionFinish(String eventType, JSONObject object) {
+        switch (eventType) {
+            case "Student":
+                initializeStudent(object);
+                break;
+            case "Courses":
+                // refreshCourseView(object);
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public void onConnectionFinish(String eventType, JSONArray array) {
+        switch (eventType) {
+            case "Student":
+                // initializeStudent(array);
+                break;
+            case "Courses":
+                refreshCourseView(array);
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public void onDialogDisplayed() {
+        isDialogDisplayed = true;
+    }
+
+    @Override
+    public void onDialogDismissed() {
+        isDialogDisplayed = false;
+    }
+
+    public void showReadFragment() {
+        readFragment = (NFCReadFragment) getSupportFragmentManager().findFragmentByTag(NFCReadFragment.TAG);
+        if (readFragment == null) {
+            readFragment = NFCReadFragment.newInstance();
+        }
+        readFragment.show(getSupportFragmentManager(), NFCReadFragment.TAG);
     }
 
     private void initializeStudent(JSONObject object) {
@@ -224,33 +274,5 @@ public class HomeActivity extends AppCompatActivity implements
 
     Student getStudent() {
         return student;
-    }
-
-    @Override
-    public void onConnectionFinish(String eventType, JSONObject object) {
-        switch (eventType) {
-            case "Student":
-                initializeStudent(object);
-                break;
-            case "Courses":
-                // refreshCourseView(object);
-                break;
-            default:
-                break;
-        }
-    }
-
-    @Override
-    public void onConnectionFinish(String eventType, JSONArray array) {
-        switch (eventType) {
-            case "Student":
-                // initializeStudent(array);
-                break;
-            case "Courses":
-                refreshCourseView(array);
-                break;
-            default:
-                break;
-        }
     }
 }
