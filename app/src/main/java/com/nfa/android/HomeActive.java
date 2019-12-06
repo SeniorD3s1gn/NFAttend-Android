@@ -26,7 +26,7 @@ public class HomeActive extends Fragment {
 
     // private DrawerLayout drawer;
     private CourseAdapter adapter;
-
+    private boolean attached;
     private TextView welcomeView;
     private TextView homeDate;
 
@@ -37,7 +37,7 @@ public class HomeActive extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home,container,false);
         homeActivity = (HomeActivity) getActivity();
-
+        attached =true;
         RecyclerView courseView = view.findViewById(R.id.course_list);
         welcomeView = view.findViewById(R.id.home_welcome);
         homeDate = view.findViewById(R.id.home_date);
@@ -77,13 +77,22 @@ public class HomeActive extends Fragment {
                 homeActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        homeDate.setText(getString(R.string.home_date_message, SDF.format(new Date())));
+                        if(attached) {
+                            homeDate.setText(getString(R.string.home_date_message, SDF.format(new Date())));
+                        }
                     }
                 });
                 handler.postDelayed(this, 1000 * 30);
             }
         };
         run.run();
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        attached =false;
+
     }
 }
 

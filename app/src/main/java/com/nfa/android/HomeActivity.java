@@ -4,12 +4,19 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import android.Manifest;
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.MifareUltralight;
@@ -51,13 +58,18 @@ public class HomeActivity extends AppCompatActivity implements
     private NFCReadFragment readFragment;
 
     private NfcAdapter adapter;
-
+    public static final String SHARED_PREFS = "sharedPrefs";
+    public static final String comboValue = "alertValue";
+    public boolean checked =false;
+    public static final String notifValue = "notifValue";
     private boolean isDialogDisplayed = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        checkLocationPermission();
 
         homeActive = new HomeActive();
         adapter = NfcAdapter.getDefaultAdapter(this);
@@ -263,6 +275,40 @@ public class HomeActivity extends AppCompatActivity implements
             Log.d(TAG, ex.getMessage());
         }
     }
+    public void savePref(int position)
+    {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.putInt(comboValue, position);
+        editor.apply();
+    }
+
+
+    public void saveNSwitch(boolean checked)
+    {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.putBoolean(notifValue, checked);
+        editor.apply();
+    }
+
+    public boolean getNSwitch()
+    {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+
+        boolean checked = sharedPreferences.getBoolean(notifValue, false);
+        return  checked;
+    }
+
+    public int getAlertValue()
+    {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+
+        int position = sharedPreferences.getInt(comboValue, 0);
+        return position;
+    }
 
     HandlerThread getThread() {
         return thread;
@@ -274,5 +320,37 @@ public class HomeActivity extends AppCompatActivity implements
 
     Student getStudent() {
         return student;
+    }
+
+    public void checkLocationPermission()
+    {
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        {
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                    1);
+        }
+
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
+        switch(requestCode)
+        {
+            case 1:
+            {
+                if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+                {
+                    Log.d("TAG", "Location Permission granted");
+                }
+                else
+                {
+                    Log.d("TAG", "Location Permission failed");
+                }
+            }
+        }
     }
 }

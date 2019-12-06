@@ -3,6 +3,7 @@ package com.nfa.android;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -24,7 +25,7 @@ public class MainActivity extends AppCompatActivity implements ConnectionListene
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String api = "https://nfattend.firebaseapp.com/api/auth/";
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
 
     private EditText Email;
     private EditText Password;
@@ -115,4 +116,6 @@ public class MainActivity extends AppCompatActivity implements ConnectionListene
             }
         }
     }
+
+
 }
